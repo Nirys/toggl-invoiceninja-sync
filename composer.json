@@ -1,5 +1,5 @@
 {
-    "name": "matthieu/toggl-invoiceninja-sync",
+    "name": "nirys/toggl-invoiceninja-sync",
     "description": "Sync toggl loggings to invoiceninja",
     "license": "MIT",
     "type": "project",
