@@ -1,0 +1,16 @@
+Syncer\Dto\Toggl\WorkspaceUser:
+  exclusion_policy: ALL
+  properties:
+    id:
+      type: integer
+      exclude: false
+    email:
+      type: string
+      exclude: false
+    fullname:
+      type: string
+      exclude: false
+    imageUrl:
+      type: string
+      exclude: false
+      serializedName: image_url

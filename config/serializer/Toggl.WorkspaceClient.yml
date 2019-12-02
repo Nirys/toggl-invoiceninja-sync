@@ -1,0 +1,12 @@
+Syncer\Dto\Toggl\WorkspaceClient:
+  exclusion_policy: ALL
+  properties:
+    id:
+      type: integer
+      exclude: false
+    wid:
+      type: integer
+      exclude: false
+    name:
+      type: string
+      exclude: false

@@ -5,6 +5,7 @@ namespace Syncer\Toggl;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use JMS\Serializer\SerializerInterface;
+use JMS\Serializer\Tests\Fixtures\Discriminator\Car;
 use Syncer\Dto\Toggl\DetailedReport;
 
 /**
@@ -51,14 +52,18 @@ class ReportsClient
      * @param int $workspaceId
      * @return array|\JMS\Serializer\scalar|object|DetailedReport
      */
-    public function getDetailedReport(int $workspaceId)
-    {
+    public function getDetailedReport(
+        int $workspaceId,
+        $since = 'yesterday'
+    ) {
+        $sinceDate = new Carbon($since);
+
         $res = $this->client->request('GET', self::VERSION . '/details', [
             'auth' => [$this->api_key, 'api_token'],
             'query' => [
                 'user_agent' => 'matthieu@calie.be',
                 'workspace_id' => $workspaceId,
-                'since' => Carbon::yesterday()->format('Y-m-d')
+                'since' => $sinceDate->format('Y-m-d H:i:s')
             ]
         ]);
 

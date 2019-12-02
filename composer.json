@@ -30,8 +30,10 @@
         "symfony/var-dumper": "^4.0",
         "leanphp/phpspec-code-coverage": "^4.0"
     },
-    "bin": ["syncer"],
-    "config": {
-        "bin-dir": "./"
-    }
-}
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Syncer\\InvoiceNinja\\ServiceProvider"
+            ]
+        }
+    }}

@@ -1,0 +1,16 @@
+Syncer\Dto\Toggl\WorkspaceProject:
+  exclusion_policy: ALL
+  properties:
+    id:
+      type: integer
+      exclude: false
+    wid:
+      type: integer
+      exclude: false
+    clientId:
+      type: integer
+      exclude: false
+      serialized_name: cid
+    name:
+      type: string
+      exclude: false
