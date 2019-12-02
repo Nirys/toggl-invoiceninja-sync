@@ -2,11 +2,12 @@
 
 namespace Syncer\Command;
 
+use Symfony\Component\Console\Input\InputArgument;
 use Syncer\Dto\InvoiceNinja\Task;
 use Syncer\Dto\Toggl\TimeEntry;
 use Syncer\InvoiceNinja\Client as InvoiceNinjaClient;
 use Syncer\Toggl\ReportsClient;
-use Syncer\Toggl\TogglClient;
+use Syncer\Toggl\TogglApiClient;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -27,7 +28,7 @@ class SyncTimings extends Command
     private $io;
 
     /**
-     * @var TogglClient
+     * @var TogglApiClient
      */
     private $togglClient;
 
@@ -54,14 +55,14 @@ class SyncTimings extends Command
     /**
      * SyncTimings constructor.
      *
-     * @param TogglClient $togglClient
+     * @param TogglApiClient $togglClient
      * @param ReportsClient $reportsClient
      * @param InvoiceNinjaClient $invoiceNinjaClient
      * @param array $clients
      * @param array $projects
      */
     public function __construct(
-        TogglClient $togglClient,
+        TogglApiClient $togglClient,
         ReportsClient $reportsClient,
         InvoiceNinjaClient $invoiceNinjaClient,
         $clients,
@@ -85,6 +86,8 @@ class SyncTimings extends Command
             ->setName('sync:timings')
             ->setDescription('Syncs timings from toggl to invoiceninja')
         ;
+
+        $this->addArgument('since', InputArgument::OPTIONAL, 'Include since', 'yesterday');
     }
 
     /**
@@ -102,7 +105,7 @@ class SyncTimings extends Command
         }
 
         foreach ($workspaces as $workspace) {
-            $detailedReport = $this->reportsClient->getDetailedReport($workspace->getId());
+            $detailedReport = $this->reportsClient->getDetailedReport($workspace->getId(), $input->getArgument('since'));
 
             foreach($detailedReport->getData() as $timeEntry) {
                 $timeEntrySent = false;

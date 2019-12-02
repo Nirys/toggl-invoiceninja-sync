@@ -5,7 +5,7 @@ namespace spec\Syncer\Toggl;
 use GuzzleHttp\Client;
 use JMS\Serializer\SerializerInterface;
 use Psr\Http\Message\ResponseInterface;
-use Syncer\Toggl\TogglClient;
+use Syncer\Toggl\TogglApiClient;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 
@@ -18,7 +18,7 @@ class TogglClientSpec extends ObjectBehavior
 
     function it_is_initializable()
     {
-        $this->shouldHaveType(TogglClient::class);
+        $this->shouldHaveType(TogglApiClient::class);
     }
 
     function it_can_get_all_workspaces(Client $client, SerializerInterface $serializer, ResponseInterface $response)
