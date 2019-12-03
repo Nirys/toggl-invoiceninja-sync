@@ -16,6 +16,8 @@ class SyncToggl extends Command {
 
     protected $signature = 'toggl:sync';
 
+    protected $description = 'Sync time from Toggl to tasks';
+
     protected $togglClient;
     /**
      * @var ReportsClient
@@ -26,6 +28,7 @@ class SyncToggl extends Command {
     {
         parent::configure();
         $this->addArgument('since', InputArgument::OPTIONAL, 'Sync time since', 'yesterday');
+        $this->addArgument('until', InputArgument::OPTIONAL, 'Sync time until', 'now');
     }
 
     public function __construct(
@@ -47,7 +50,8 @@ class SyncToggl extends Command {
         }
 
         $syncTimeSince = $input->getArgument('since');
-        $output->writeln("Syncing time since $syncTimeSince");
+        $syncTimeUntil = $input->getArgument('until');
+        $output->writeln("Syncing time since $syncTimeSince until $syncTimeUntil");
 
         /** @var Workspace $workspace */
         foreach ($workspaces as $workspace) {
@@ -66,16 +70,39 @@ class SyncToggl extends Command {
                 $client->sync();
             }
 
-            /** @var DetailedReport $detailedReport */
-            $detailedReport = $this->reportsClient->getDetailedReport($workspace->getId(), $input->getArgument('since'));
+            $timeEntries = $this->getAllTime($workspace->getId(), $syncTimeSince, $syncTimeUntil);
 
-            foreach($detailedReport->getData() as $timeEntry) {
+            foreach($timeEntries as $timeEntry) {
                 $timeEntrySent = $timeEntry->sync();
 
                 if ($timeEntrySent) {
                     $output->writeln('TimeEntry ('. $timeEntry->getDescription() . ') sent to InvoiceNinja');
+                }else{
+                    $output->writeln('ERROR: Unable to sync ' . $timeEntry->getDescription());
                 }
             }
         }
+    }
+
+    protected function getAllTime(
+        $workspace,
+        $from,
+        $to
+    ) {
+        $page = 1;
+        $detailedReport = $this->reportsClient->getDetailedReport($workspace, $from, $to, $page);
+        $timeEntries = $detailedReport->getData();
+
+        if($detailedReport->getTotalCount() >= $detailedReport->getPerPage()){
+            $totalRecords = $detailedReport->getTotalCount();
+            $perPage = $detailedReport->getPerPage();
+            $totalPages = floor($totalRecords/$perPage) + 1;
+            while($page < $totalPages){
+                $page++;
+                $detailedReport = $this->reportsClient->getDetailedReport($workspace, $from, $to, $page);
+                $timeEntries = array_merge($timeEntries, $detailedReport->getData());
+            }
+        }
+        return $timeEntries;
     }
 }
