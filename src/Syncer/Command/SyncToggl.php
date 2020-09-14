@@ -12,8 +12,8 @@ use Syncer\InvoiceNinja\Mapper;
 use Syncer\Toggl\ReportsClient;
 use Syncer\Toggl\TogglApiClient;
 
-class SyncToggl extends Command {
-
+class SyncToggl extends Command
+{
     protected $signature = 'toggl:sync';
 
     protected $description = 'Sync time from Toggl to tasks';
@@ -24,7 +24,7 @@ class SyncToggl extends Command {
      */
     private $reportsClient;
 
-    function configure()
+    public function configure()
     {
         parent::configure();
         $this->addArgument('since', InputArgument::OPTIONAL, 'Sync time since', 'yesterday');
@@ -56,28 +56,37 @@ class SyncToggl extends Command {
         /** @var Workspace $workspace */
         foreach ($workspaces as $workspace) {
             $users = $this->togglClient->getWorkspaceUsers($workspace);
-            foreach($users as $user){
+            foreach ($users as $user) {
                 $user->sync();
             }
 
             $projects = $this->togglClient->getWorkspaceProjects($workspace);
-            foreach($projects as $project){
+            foreach ($projects as $project) {
                 $project->sync();
             }
 
             $clients = $this->togglClient->getWorkspaceClients($workspace);
-            foreach($clients as $client){
+            foreach ($clients as $client) {
                 $client->sync();
             }
 
             $timeEntries = $this->getAllTime($workspace->getId(), $syncTimeSince, $syncTimeUntil);
 
-            foreach($timeEntries as $timeEntry) {
+            foreach ($timeEntries as $timeEntry) {
                 $timeEntrySent = $timeEntry->sync();
 
                 if ($timeEntrySent) {
-                    $output->writeln('TimeEntry ('. $timeEntry->getDescription() . ') sent to InvoiceNinja');
-                }else{
+                    $output->write('TimeEntry ('. $timeEntry->getDescription() . ') sent to InvoiceNinja...');
+                    // We synced successfully, so tag the entry
+                    $entry = $this->togglClient->get('time_entries/' . $timeEntry->getUid());
+                    if (!property_exists($entry, 'tags')) {
+                        $entry->tags = [];
+                    }
+                    $entry->tags[] = 'Imported';
+                    $entry->tags[] = 'Ninja';
+                    $response = $this->togglClient->put('time_entries/' . $timeEntry->getUid(), ['time_entry' => $entry ]);
+                    $output->writeln("tagged");
+                } else {
                     $output->writeln('ERROR: Unable to sync ' . $timeEntry->getDescription());
                 }
             }
@@ -93,11 +102,11 @@ class SyncToggl extends Command {
         $detailedReport = $this->reportsClient->getDetailedReport($workspace, $from, $to, $page);
         $timeEntries = $detailedReport->getData();
 
-        if($detailedReport->getTotalCount() >= $detailedReport->getPerPage()){
+        if ($detailedReport->getTotalCount() >= $detailedReport->getPerPage()) {
             $totalRecords = $detailedReport->getTotalCount();
             $perPage = $detailedReport->getPerPage();
             $totalPages = floor($totalRecords/$perPage) + 1;
-            while($page < $totalPages){
+            while ($page < $totalPages) {
                 $page++;
                 $detailedReport = $this->reportsClient->getDetailedReport($workspace, $from, $to, $page);
                 $timeEntries = array_merge($timeEntries, $detailedReport->getData());

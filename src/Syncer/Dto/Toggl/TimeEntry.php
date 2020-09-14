@@ -439,40 +439,52 @@ class TimeEntry
     public function sync()
     {
         $ninjaClient = TogglClient::where('name', $this->client)->first();
-        if($ninjaClient){
+        if ($ninjaClient) {
             $ninjaClient = \App\Models\Client::where('toggl_id', $ninjaClient->toggl_id)->first();
         }
 
         $ninjaProject = \App\Models\Project::where('toggl_id', $this->pid)->first();
-        if(!$ninjaProject){
+        if (!$ninjaProject) {
             $ninjaProject = Mapper::getProject($this->project);
         }
-        if(!$ninjaClient && !$ninjaProject) return null;
+        if (!$ninjaClient && !$ninjaProject) {
+            return null;
+        }
 
         /** @var User $user */
         $user = User::where('toggl_id', $this->getUid())->first();
-        if(!$user) return null;
+        if (!$user) {
+            return null;
+        }
 
         /** @var \App\Models\Task $ninjaTask */
         $ninjaTask = Task::where('toggl_id', $this->getId())->first();
-        if(!$ninjaTask) $ninjaTask = new Task();
+        if (!$ninjaTask) {
+            $ninjaTask = new Task();
+        }
 
         $ninjaTask->user_id = $user->id;
         $ninjaTask->account_id = $user->account->id;
-        if($ninjaClient) $ninjaTask->client_id = $ninjaClient->id;
+        if ($ninjaClient) {
+            $ninjaTask->client_id = $ninjaClient->id;
+        }
         $ninjaTask->description = $this->getDescription();
         $ninjaTask->time_log = $this->buildTimeLog();
-        if($ninjaProject) $ninjaTask->project_id = $ninjaProject->id;
+        if ($ninjaProject) {
+            $ninjaTask->project_id = $ninjaProject->id;
+        }
         $ninjaTask->toggl_id = $this->getId();
 
         $ninjaTask->save();
+
         return $ninjaTask;
     }
 
     /**
      * @return false|string
      */
-    protected function buildTimeLog(){
+    protected function buildTimeLog()
+    {
         $timeLog = [[
             $this->getStart()->getTimestamp(),
             $this->getEnd()->getTimestamp(),
